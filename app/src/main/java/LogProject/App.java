@@ -3,11 +3,12 @@
  */
 package LogProject;
 
-import java.util.Properties;
+import java.io.File;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 
 public class App {
@@ -22,19 +23,26 @@ public class App {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
-    static Logger logger = LogManager.getLogger(App.class.getName());
+    static Logger alogger = LogManager.getLogger(App.class.getName());
 
     public static void main(String[] args) {
         Configurator.setRootLevel(Level.ALL);
-
         App app = new App();
-        if (app.setLevel(args[0])) {
-            app.run();
+        if (args.length >= 1 && app.setLevel(args[0])) {
+            app.run(alogger);
+        } else {
+            Logger pLogger = LogManager.getLogger(App.class);
+            File propertiesFile = new File("src/main/resources/log4j.properties");
+            LoggerContext context = (LoggerContext) LogManager.getContext(false);
+            context.setConfigLocation(propertiesFile.toURI());
+            app.run(pLogger);
         }
     }
 
     private boolean setLevel(String level) {
-        if (level.equals("TRACE"))
+        if (level.equals("ALL"))
+            Configurator.setLevel(App.class, Level.ALL);
+        else if (level.equals("TRACE"))
             Configurator.setLevel(App.class, Level.TRACE);
         else if (level.equals("DEBUG"))
             Configurator.setLevel(App.class, Level.DEBUG);
@@ -53,7 +61,7 @@ public class App {
         return true;
     }
 
-    public void run() {
+    public void run(Logger logger) {
         logger.trace(ANSI_GREEN + "> This is a TRACE message" + ANSI_RESET);
         logger.debug(ANSI_PURPLE + "> This is a DEBUG message" + ANSI_RESET);
         logger.info(ANSI_BLUE + "> This is an INFO message" + ANSI_RESET);
